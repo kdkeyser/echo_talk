@@ -1,0 +1,18 @@
+[package]
+name = "rust-echo-server"
+version = "0.1.0"
+
+[dependencies]
+clap = "*"
+env_logger = "*"
+log = "*"
+
+[[bin]]
+name = "coio-tcp-echo-server"
+
+[dependencies.coio]
+git = "https://github.com/zonyitoo/coio-rs.git"
+rev = "6354839e16b0453fb14cfe8904d7db82f9041132"
+
+[profile.release]
+lto=true
