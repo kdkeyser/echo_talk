@@ -8,14 +8,40 @@ import (
     "sync"
     "sync/atomic"
     "time"
+    "runtime"
 )
 
 var (
-    targetAddr  = flag.String("a", "127.0.0.1:6000", "target echo server address")
+    targetAddr  = flag.String("a", "127.0.0.1:12345", "target echo server address")
     testMsgLen  = flag.Int("l", 26, "test message length")
     testConnNum = flag.Int("c", 50, "test connection number")
     testSeconds = flag.Int("t", 10, "test duration in seconds")
 )
+
+func HandleError(err error) (b bool) {
+    if err != nil {
+        // notice that we're using 1, so it will actually log where
+        // the error happened, 0 = this function, we don't want that.
+        _, fn, line, _ := runtime.Caller(1)
+        log.Printf("[error] %s:%d %v", fn, line, err)
+        b = true
+    }
+    return
+}
+
+//this logs the function name as well.
+func FancyHandleError(err error) (b bool) {
+    if err != nil {
+        // notice that we're using 1, so it will actually log the where
+        // the error happened, 0 = this function, we don't want that.
+        pc, fn, line, _ := runtime.Caller(1)
+
+        log.Printf("[error] in %s[%s:%d] %v", runtime.FuncForPC(pc).Name(), fn, line, err)
+        b = true
+    }
+    return
+}
+
 
 func main() {
     flag.Parse()
@@ -41,18 +67,19 @@ func main() {
         go func() {
             if conn, err := net.DialTimeout("tcp", *targetAddr, time.Minute*99999); err == nil {
                 l := len(msg)
-                msg[l-1]='\n'
+                msg[l-1] = '\n'
                 recv := make([]byte, l)
 
                 for {
-                    for rest := l; rest > 0 ; {
-                        i, err := conn.Write(msg);
-                        rest -= i
+                    for i := 0; i < l ; {
+                        written, err := conn.Write(msg[i:l]);
                         if err != nil {
-                            log.Println(err)
+                            HandleError(err)
                             break
                         }
+                        i += written
                     }
+                    
 
                     atomic.AddUint64(&outNum, 1)
 
@@ -60,13 +87,13 @@ func main() {
                         break
                     }
 
-                    for rest := l; rest > 0 ; {
-                        i, err := conn.Read(recv)
-                        rest -= i
+                    for i := 0; i < l ; {
+                        read, err := conn.Read(recv[i:l])
                         if err != nil {
-                            log.Println(err)
+                            HandleError(err)
                             break
                         }
+                        i += read
                     }
 
                     atomic.AddUint64(&inNum, 1)
@@ -76,7 +103,7 @@ func main() {
                     }
                 }
             } else {
-                log.Println(err)
+                HandleError(err)
             }
 
             wg.Done()
