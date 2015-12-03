@@ -7,4 +7,5 @@ echo-perftest/.stack-work/**
 boost_asio_echo/build/**
 boost_asio_echo/dist/**
 go_server/go_server
+go_driver/go_driver
 
