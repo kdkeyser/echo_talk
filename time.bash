@@ -30,7 +30,7 @@ test_go () {
 test_conduit () {
         cd echo-server-conduit
         # stack exec Echo -- +RST -N ${THREADS} -RTS > /dev/null 2> /dev/null &
-        stack exec Echo -- +RST -N ${THREADS} -RTS &
+        stack exec Echo -- +RST -N ${THREADS} -N3 -A16M -kc4k -RTS &
         ECHO_SERVER_CONDUIT_PID=$!
         sleep 1
         cd -
@@ -71,21 +71,21 @@ pkill stack || true
 pkill boost_asio_echo || true
 pkill coio-tcp-echo-server || true
 
-# echo GO ------------------------------------------------------
-# test_go
-# sleep 2
-# 
-# echo CONDUIT ------------------------------------------------------
-# test_conduit
-# sleep 2
-# 
-# echo BOOST ------------------------------------------------------
-# test_boost
-# sleep 2
-
-echo COIO ------------------------------------------------------
-test_coio
+echo GO ------------------------------------------------------
+test_go
 sleep 2
+
+echo CONDUIT ------------------------------------------------------
+test_conduit
+sleep 2
+
+echo BOOST ------------------------------------------------------
+test_boost
+sleep 2
+
+# echo COIO ------------------------------------------------------
+# test_coio
+# sleep 2
 
 
 
