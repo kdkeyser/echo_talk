@@ -10,7 +10,7 @@ import (
 func echo(s net.Conn, i int) {
 	defer s.Close()
     recv := make([]byte, 65536)
-	fmt.Printf("%d: %v <-> %v\n", i, s.LocalAddr(), s.RemoteAddr())
+	// fmt.Printf("%d: %v <-> %v\n", i, s.LocalAddr(), s.RemoteAddr())
 	for {
         read := 0
         for i := 0; ; { 
@@ -30,7 +30,7 @@ func echo(s net.Conn, i int) {
         s.Write(recv[0:read])
 	}
 Error:
-	fmt.Printf("%d: closed\n", i)
+	// fmt.Printf("%d: closed\n", i)
 }
 
 func main() {
