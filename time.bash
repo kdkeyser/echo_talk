@@ -43,7 +43,7 @@ test_conduit () {
 test_boost () {
         cd boost_asio_echo/dist/Release/GNU-Linux
         # ./boost_asio_echo 127.0.0.1 6000 ${THREADS} > /dev/null 2> /dev/null &
-        ./boost_asio_echo 127.0.0.1 6000 ${THREADS} &
+        ./boost_asio_echo 127.0.0.1 6000 ${THREADS} 0 &
         BOOST_ASIO_ECHO_PID=$!
         sleep 1
         cd -
@@ -78,7 +78,7 @@ sleep 2
 echo CONDUIT ------------------------------------------------------
 test_conduit
 sleep 2
-
+ 
 echo BOOST ------------------------------------------------------
 test_boost
 sleep 2

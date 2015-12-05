@@ -1,9 +1,9 @@
 #!/bin/bash
 set -ex
 
-cd rust-echo-server
-cargo build --release
-cd -
+# cd rust-echo-server
+# cargo build --release
+# cd -
 
 cd go_server
 /usr/local/go/bin/go build
