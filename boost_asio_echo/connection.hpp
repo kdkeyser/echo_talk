@@ -28,7 +28,7 @@ class connection
 {
 public:
   /// Construct a connection with the given io_service.
-  explicit connection(boost::asio::io_service& io_service);
+  explicit connection(boost::asio::io_service& io_service, bool should_log);
 
   /// Get the socket associated with the connection.
   boost::asio::ip::tcp::socket& socket();
@@ -36,6 +36,8 @@ public:
   /// Start the first asynchronous operation for the connection.
   void start();
   
+  bool should_log_;
+
   exit_matcher em;
   
   size_t total_bytes_read;

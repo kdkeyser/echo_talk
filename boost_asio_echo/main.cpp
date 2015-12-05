@@ -20,15 +20,16 @@ int main(int argc, char* argv[])
   try
   {
     // Check command line arguments.
-    if (argc != 4)
+    if (argc != 5)
     {
-      std::cerr << "Usage: echo_server <address> <port> <threads>\n";
+      std::cerr << "Usage: echo_server <address> <port> <threads> <should_log>\n";
       return 1;
     }
 
     // Initialise the server.
     std::size_t num_threads = boost::lexical_cast<std::size_t>(argv[3]);
-    echo::server::server s(argv[1], argv[2], num_threads);
+    bool should_log = boost::lexical_cast<bool>(argv[4]);
+    echo::server::server s(argv[1], argv[2], num_threads, should_log);
 
     // Run the server until stopped.
     s.run();

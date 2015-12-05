@@ -17,8 +17,9 @@
 namespace echo {
 namespace server {
 
-server::server(const std::string& address, const std::string& port, std::size_t thread_pool_size)
+server::server(const std::string& address, const std::string& port, std::size_t thread_pool_size, bool should_log)
   : thread_pool_size_(thread_pool_size),
+    should_log_(should_log),
     signals_(io_service_),
     acceptor_(io_service_),
     new_connection_()
@@ -47,7 +48,9 @@ server::server(const std::string& address, const std::string& port, std::size_t 
 
 void server::run()
 {
-  std::cerr << "Starting server with " << thread_pool_size_ << " threads" << std::endl;
+  if (should_log_) {
+    std::cerr << "Starting server with " << thread_pool_size_ << " threads" << std::endl;
+  }
   // Create a pool of threads to run all of the io_services.
   std::vector<boost::shared_ptr<boost::thread> > threads;
   for (std::size_t i = 0; i < thread_pool_size_; ++i)
@@ -64,8 +67,10 @@ void server::run()
 
 void server::start_accept()
 {
-  std::cerr << "Waiting for a connection" << std::endl;
-  new_connection_.reset(new connection(io_service_));
+  if (should_log_) {
+    std::cerr << "Waiting for a connection" << std::endl;
+  }
+  new_connection_.reset(new connection(io_service_, should_log_));
   acceptor_.async_accept(new_connection_->socket(),
       boost::bind(&server::handle_accept, this,
         boost::asio::placeholders::error));
@@ -73,7 +78,9 @@ void server::start_accept()
 
 void server::handle_accept(const boost::system::error_code& e)
 {
-  std::cerr << "Accepting a connection" << std::endl;
+  if (should_log_) {
+    std::cerr << "Accepting a connection" << std::endl;
+  }
   if (!e)
   {
     new_connection_->start();
@@ -84,7 +91,9 @@ void server::handle_accept(const boost::system::error_code& e)
 
 void server::handle_stop()
 {
-  std::cerr << "Stopping server" << std::endl;
+  if (should_log_) {
+    std::cerr << "Stopping server" << std::endl;
+  }
   io_service_.stop();
 }
 

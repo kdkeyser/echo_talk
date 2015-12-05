@@ -18,8 +18,8 @@
 namespace echo {
   namespace server {
 
-    connection::connection(boost::asio::io_service& io_service)
-    : strand_(io_service), socket_(io_service), em(), total_bytes_read(0) {
+    connection::connection(boost::asio::io_service& io_service, bool should_log)
+    : strand_(io_service), socket_(io_service), should_log_ (should_log), em(), total_bytes_read(0) {
     }
 
     boost::asio::ip::tcp::socket& connection::socket() {
@@ -27,7 +27,9 @@ namespace echo {
     }
 
     void connection::start() {
-      std::cerr << "Starting connection handler" << std::endl;
+      if (should_log_) {
+        std::cerr << "Starting connection handler" << std::endl;
+      }
       
       boost::asio::ip::tcp::no_delay option (true);
       socket_.set_option(option);
@@ -45,7 +47,9 @@ namespace echo {
         total_bytes_read += bytes_transferred;
         /* Check if we got an exit command. */
         if (em.try_match(buffer_, bytes_transferred)) {
-          std::cerr << "Saw exit: terminating connection after reading " << total_bytes_read << " bytes" << std::endl;
+          if (should_log_) {
+            std::cerr << "Saw exit: terminating connection after reading " << total_bytes_read << " bytes" << std::endl;
+          }
           socket_.close();
 
           return;
@@ -60,12 +64,16 @@ namespace echo {
         return;
       } else {
         if (e == boost::asio::error::eof) {
-          std::cerr << "EOF reached" << std::endl;
+          if (should_log_) {
+            std::cerr << "EOF reached" << std::endl;
+          }
         } else {
           std::cerr << "Could not read data due to unknown error " << e << std::endl;
         }
         
-        std::cerr << "Terminating connection after reading " << total_bytes_read << " bytes of data" << std::endl;
+        if (should_log_) {
+          std::cerr << "Terminating connection after reading " << total_bytes_read << " bytes of data" << std::endl;
+        }
 
         socket_.close();
         return;

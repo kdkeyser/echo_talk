@@ -28,7 +28,7 @@ class server
 public:
   /// Construct the server to listen on the specified TCP address and port, and
   /// serve up files from the given directory.
-  explicit server(const std::string& address, const std::string& port, std::size_t thread_pool_size);
+  explicit server(const std::string& address, const std::string& port, std::size_t thread_pool_size, bool should_log);
 
   /// Run the server's io_service loop.
   void run();
@@ -45,6 +45,9 @@ private:
 
   /// The number of threads that will call io_service::run().
   std::size_t thread_pool_size_;
+
+  /// Log stuff to std:cerr
+  bool should_log_;
 
   /// The io_service used to perform asynchronous operations.
   boost::asio::io_service io_service_;
