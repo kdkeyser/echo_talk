@@ -2,7 +2,7 @@
 set -e
 
 TEST_CONNECTION_NUMBER=1000
-TEST_MESSAGE_LENGTH=1000
+TEST_MESSAGE_LENGTH=10000
 DRIVER_THREADS=2
 SERVER_THREADS=3
 TEST_DURATION=10
@@ -30,8 +30,8 @@ test_go () {
 
 test_conduit () {
         cd echo-server-conduit
-        # stack exec Echo -- +RST -N ${SERVER_THREADS} -RTS > /dev/null 2> /dev/null &
-        stack exec Echo -- +RST -N ${SERVER_THREADS} -A16M -kc4k -RTS &
+        # stack exec Echo -- +RTS -N${SERVER_THREADS} -A16M -kc4k -RTS &
+        stack exec Echo -- +RTS -N${SERVER_THREADS} &
         ECHO_SERVER_CONDUIT_PID=$!
         sleep 1
         cd -
