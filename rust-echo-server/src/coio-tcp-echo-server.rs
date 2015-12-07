@@ -3,12 +3,13 @@ extern crate clap;
 extern crate log;
 extern crate env_logger;
 
-extern crate coio;
+extern crate mioco;
+
+use std::str::FromStr;
+use std::io::{Read, Write};
+use mioco::mio::tcp::{TcpSocket};
 
 use clap::{Arg, App};
-
-use coio::Scheduler;
-use coio::net::tcp::TcpListener;
 
 #[derive (Clone, Copy, Debug)]
 enum ExitState { OFFTRACK, NL, E, X, I, T, CR, MATCH }
@@ -82,54 +83,52 @@ fn main() {
                       .get_matches();
 
     let bind_addr = matches.value_of("BIND").unwrap().to_owned();
-    let num_workers = matches.value_of("THREADS").unwrap_or("1").parse().unwrap();
     let buffer_size = matches.value_of("BUFFERSIZE").unwrap_or("16384").parse().unwrap();
+    let num_workers = matches.value_of("THREADS").unwrap_or("1").parse().unwrap();
 
     info! ("Server started at address {:?}", bind_addr);
-    info! ("Starting with {:?} workers", num_workers);
     info! ("Using buffer size of {:?} per connection", buffer_size);
 
-    Scheduler::new()
-        .with_workers(num_workers)
-        .run(move || {
-            let server = TcpListener::bind(&bind_addr[..]).unwrap();
+    let mut config = mioco::Config::new ();
+    config.set_thread_num (num_workers);
 
-            info!("Listening on {:?}", server.local_addr().unwrap());
+    mioco::Mioco::new_configured(config).start(move |mioco| {
+        let sock = try!(TcpSocket::v4());
+        let addr = FromStr::from_str(&bind_addr).unwrap();
+        try!(sock.bind(&addr));
+        let sock = try!(sock.listen(1024));
 
-            for stream in server.incoming() {
-                use std::io::{Read, Write};
+        println!("Starting tcp echo server on {:?}", sock.local_addr().unwrap());
 
-                let (mut stream, addr) = stream.unwrap();
-                info!("Accept connection: {:?}", addr);
+        let sock = mioco.wrap(sock);
 
-                Scheduler::spawn(move || {
-                    let mut buf = vec![0; buffer_size];
+        loop {
+            let conn = try!(sock.accept());
 
-                    let mut em = ExitMatcher::new ();
+            mioco.spawn(move |mioco| {
+                let mut conn = mioco.wrap(conn);
 
-                    loop {
-                        debug!("Trying to Read...");
-                        match stream.read(&mut buf) {
-                            Ok(0) => {
-                                info!("EOF received, going to close: {:?}", addr);
-                                break;
-                            }
-                            Ok(len) => {
-                                stream.write_all(&buf[0..len]).unwrap();
-                                if em.try_match (&buf[0..len]) {
-                                    info!("'exit' matched, closing connection");
-                                    break;
-                                }
-                            }
-                            Err(err) => {
-                                panic!("Error occurs: {:?}", err);
-                            }
-                        }
+                let mut em = ExitMatcher::new ();
+                let mut buf = vec![0; buffer_size];
+                loop {
+                    let size = try!(conn.read(&mut buf));
+                    if size == 0 {
+                        /* eof */
+                        break;
                     }
 
-                    info!("{:?} closed", addr);
-                });
-            }
-        })
-        .unwrap();
+                    if em.try_match (&buf[0..size]) {
+                        info!("'exit' matched, closing connection");
+                        break;
+                    }
+
+                    try!(conn.write_all(&mut buf[0..size]))
+                }
+
+                info!("{:?} closed", addr);
+
+                Ok(())
+            });
+        }
+    });
 }

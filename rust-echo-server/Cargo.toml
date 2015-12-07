@@ -10,9 +10,8 @@ log = "*"
 [[bin]]
 name = "coio-tcp-echo-server"
 
-[dependencies.coio]
-git = "https://github.com/zonyitoo/coio-rs.git"
-rev = "6354839e16b0453fb14cfe8904d7db82f9041132"
+[dependencies.mioco]
+git = "https://github.com/dpc/mioco.git"
 
 [profile.release]
 lto=true
