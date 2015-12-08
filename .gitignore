@@ -12,3 +12,7 @@ go_driver/go_driver
 java_server/nbproject/private/
 java_server/build/
 java_server/dist/
+ocaml_server/a.out
+*.cmx
+*.cmi
+*.o
