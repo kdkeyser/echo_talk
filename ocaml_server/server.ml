@@ -35,15 +35,50 @@ let process socket ~timeout ~callback =
   in
   _process ()
 
+type exitState = OFFTRACK | NL | E | X | I | T | CR | MATCH
+
+let next_state es c =
+        match (es, c) with
+        | (NL, 'e') -> E
+        | (E, 'x') -> X
+        | (X, 'i') -> I
+        | (I, 't') -> T
+        | (T, '\r') -> CR
+        | (CR, '\n') -> MATCH
+        | (MATCH, _) -> MATCH
+        | (_, '\n') -> NL
+        | (_, _) -> OFFTRACK
+
+let fold_bytes es buf actual_len =
+        let rec loop i es =
+                if i < actual_len then
+                        let c = Bytes.get buf i in
+                        let new_es = next_state es c in
+                        loop (i+1) new_es
+                else
+                        es
+        in
+        loop 0 es
+
 let copy_until_exit ic oc =
         let buf_len = 8192 in
         let buf = Bytes.create buf_len in
-        let rec loop () =
-                Lwt_io.read_into ic buf 0 buf_len >>= (fun actual_len ->
-                Lwt_io.write_from_exactly oc buf 0 actual_len) >>= (fun () ->
-                loop ())
+        let rec loop es () =
+                Lwt_io.read_into ic buf 0 buf_len
+                >>=
+                (fun actual_len ->
+                        let new_es = fold_bytes es buf actual_len in
+                        Lwt_io.write_from_exactly oc buf 0 actual_len
+                        >>=
+                        (fun () -> Lwt.return new_es)
+                )
+                >>=
+                (fun new_es ->
+                        if new_es = MATCH then Lwt.return ()
+                        else loop new_es ()
+                )
         in
-        loop ()
+        loop NL ()
 
 let main =
   let () = Printf.printf "Hallo\n%!" in
