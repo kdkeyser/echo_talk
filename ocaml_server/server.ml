@@ -3,7 +3,7 @@
 open Lwt
 
 let server_port = 6000
-let so_timeout = Some 20
+let so_timeout = None
 let backlog = 1024
 
 let try_close chan =
@@ -35,6 +35,16 @@ let process socket ~timeout ~callback =
   in
   _process ()
 
+let copy_until_exit ic oc =
+        let buf_len = 8192 in
+        let buf = Bytes.create buf_len in
+        let rec loop () =
+                Lwt_io.read_into ic buf 0 buf_len >>= (fun actual_len ->
+                Lwt_io.write_from_exactly oc buf 0 actual_len) >>= (fun () ->
+                loop ())
+        in
+        loop ()
+
 let main =
   let () = Printf.printf "Hallo\n%!" in
   let () = Printf.printf "Listening to port %d\n%!" server_port in
@@ -44,7 +54,5 @@ let main =
     process
       socket
       ~timeout:so_timeout
-      ~callback:
-        (fun inchan outchan ->
-          Lwt_io.read_line inchan >>= (fun msg -> Lwt_io.write_line outchan msg))
+      ~callback:copy_until_exit
   )
