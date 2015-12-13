@@ -2,7 +2,7 @@ package main
 
 import (
         //"runtime"
-        "fmt"
+        //"fmt"
         "net"
 )
 
@@ -45,7 +45,7 @@ func newExitMatcher () *ExitMatcher {
 }
 
 func (em *ExitMatcher) trans (c byte) {
-        from_state := em.state
+        //from_state := em.state
 
         switch em.state {
                 case NL: { if c == 101 { em.state = E } else { em.state = OFFTRACK } }
@@ -58,9 +58,9 @@ func (em *ExitMatcher) trans (c byte) {
                 default: { if c == 10 { em.state = NL } else { em.state = OFFTRACK } }
         }
 
-        to_state := em.state
+        //to_state := em.state
 
-        fmt.Printf("%d: %s -> %s\n", c, from_state.to_string (), to_state.to_string ());
+        //fmt.Printf("%d: %s -> %s\n", c, from_state.to_string (), to_state.to_string ());
 
         return
 }
