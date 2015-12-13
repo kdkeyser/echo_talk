@@ -69,7 +69,7 @@ sendAll socket buffer size = do
 
 runConn :: (Socket, SockAddr) -> IO ()
 runConn (sock, _) = do
-    putStrLn "Connection established"
+    -- putStrLn "Connection established"
     setSocketOption sock NoDelay 1
     buffer <-  mallocForeignPtrBytes bufferSize
     catchJust (\e -> if isEOFErrorType (ioeGetErrorType e) then Just () else Nothing)
