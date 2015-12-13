@@ -3,11 +3,13 @@ dist/**
 *.swp
 echo-server/.stack-work/**
 echo-server-conduit/.stack-work/**
+echo-server-haskell/.stack-work/**
 echo-perftest/.stack-work/**
 boost_asio_echo/build/**
 boost_asio_echo/dist/**
 go_server/go_server
 go_driver/go_driver
+ocaml_server/ocaml-server
 
 java_server/nbproject/private/
 java_server/build/
