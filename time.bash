@@ -41,6 +41,19 @@ test_conduit () {
         kill ${ECHO_SERVER_CONDUIT_PID}
 }
 
+test_haskell () {
+        cd echo-server-haskell
+        # stack exec Echo -- +RTS -N${SERVER_THREADS} -A16M -kc4k -RTS &
+        stack exec echo-server -- +RTS -N${SERVER_THREADS} &
+        ECHO_SERVER_PID=$!
+        sleep 1
+        cd -
+
+        run_driver
+
+        kill ${ECHO_SERVER_PID}
+}
+
 test_boost () {
         cd boost_asio_echo/dist/Release/GNU-Linux
         # ./boost_asio_echo 127.0.0.1 6000 ${SERVER_THREADS} > /dev/null 2> /dev/null &
@@ -67,10 +80,26 @@ test_coio () {
         kill ${COIO_TCP_ECHO_SERVER_PID}
 }
 
+test_ocaml () {
+        cd ocaml_server
+        ./ocaml-server &
+        OCAML_SERVER_PID=$!
+        sleep 1
+        cd -
+
+        run_driver
+
+        kill ${OCAML_SERVER_PID}
+}
+
 pkill go_server || true
 pkill stack || true
 pkill boost_asio_echo || true
 pkill coio-tcp-echo-server || true
+pkill echo-server || true
+pkill ocaml-server || true
+
+sleep 1
 
 echo BOOST ------------------------------------------------------
 test_boost
@@ -84,10 +113,18 @@ echo CONDUIT ------------------------------------------------------
 test_conduit
 sleep 2
  
-# echo COIO ------------------------------------------------------
-# test_coio
+# echo HASKELL ------------------------------------------------------
+# test_haskell
 # sleep 2
 
+echo COIO ------------------------------------------------------
+test_coio
+sleep 2
+
+echo OCAML ------------------------------------------------------
+test_ocaml
+sleep 2
+# 
 
 
 

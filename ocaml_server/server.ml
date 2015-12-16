@@ -3,7 +3,6 @@
 open Lwt
 
 let server_port = 6000
-let so_timeout = None
 let backlog = 1024
 
 let try_close chan =
@@ -17,18 +16,14 @@ let init_socket sockaddr =
   Lwt_unix.listen socket backlog;
   socket
 
-let process socket ~timeout ~callback =
+let process socket ~callback =
   let rec _process () =
     Lwt_unix.accept socket >>=
       (fun (socket_cli, _) ->
         let inchan = Lwt_io.of_fd ~mode:Lwt_io.input socket_cli in
         let outchan = Lwt_io.of_fd ~mode:Lwt_io.output socket_cli in
         let c = callback inchan outchan in
-        let events =
-          match timeout with
-          | None -> [c]
-          | Some t -> [c; Lwt_unix.sleep (float_of_int t) >> return ()]
-        in
+        let events = [c] in
         ignore (Lwt.pick events >> try_close outchan >> try_close inchan);
         _process ()
       )
@@ -85,9 +80,9 @@ let main =
   let () = Printf.printf "Listening to port %d\n%!" server_port in
   let sockaddr = Unix.ADDR_INET (Unix.inet_addr_any, server_port) in
   let socket = init_socket sockaddr in
+  lwt () = Lwt.return () in
   Lwt_main.run (
     process
       socket
-      ~timeout:so_timeout
       ~callback:copy_until_exit
   )
