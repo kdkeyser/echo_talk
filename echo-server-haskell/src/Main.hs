@@ -24,7 +24,7 @@ main = do
     -- listen on TCP port 6000
     bindSocket sock (SockAddrInet 6000 iNADDR_ANY)
     -- allow a maximum of 5 outstanding connections
-    listen sock 5
+    listen sock 5000
     mainLoop sock
 
 mainLoop :: Socket -> IO ()
@@ -69,12 +69,12 @@ sendAll socket buffer size = do
 
 runConn :: (Socket, SockAddr) -> IO ()
 runConn (sock, _) = do
-    putStrLn "Connection established"
+--    putStrLn "Connection established"
     setSocketOption sock NoDelay 1
     buffer <-  mallocForeignPtrBytes bufferSize
     catchJust (\e -> if isEOFErrorType (ioeGetErrorType e) then Just () else Nothing)
               (forever $ do
                            bytesRead <- readUntilNewline sock buffer (0, bufferSize)
                            sendAll sock buffer bytesRead)
-              (\_ -> putStrLn "Connection terminated")
+              (\_ -> return ()) --putStrLn "Connection terminated")
     sClose sock
